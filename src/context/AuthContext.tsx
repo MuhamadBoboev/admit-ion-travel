@@ -5,7 +5,6 @@ import { createContext, useEffect, useState, ReactNode } from 'react'
 import { useRouter } from 'next/router'
 
 // ** Axios
-import axios from 'axios'
 
 // ** Config
 import authConfig from 'src/configs/auth'
@@ -52,7 +51,7 @@ const AuthProvider = ({ children }: Props) => {
           })
           .then(async response => {
             setLoading(false)
-            setUser(response.data.data)
+            setUser(response.data)
           })
           .catch((e: any) => {
             if (e.response.status !== 200) {
@@ -75,35 +74,6 @@ const AuthProvider = ({ children }: Props) => {
   }
 
   useEffect(() => {
-    const initAuth = async (): Promise<void> => {
-      const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)!
-      if (storedToken) {
-        setLoading(true)
-        await axios
-          .get('/login/profile', {
-            headers: {
-              Authorization: `Bearer ${storedToken}`
-            }
-          })
-          .then(async response => {
-            setLoading(false)
-            setUser({ ...response.data })
-          })
-          .catch(() => {
-            localStorage.removeItem('userData')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('accessToken')
-            setUser(null)
-            setLoading(false)
-            if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
-              router.replace('/login')
-            }
-          })
-      } else {
-        setLoading(false)
-      }
-    }
-
     initAuth()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -111,7 +81,10 @@ const AuthProvider = ({ children }: Props) => {
   const handleLogin = async (params: LoginParams, errorCallback?: ErrCallbackType) => {
     try {
       const response = await axiosInstance.post(authConfig.loginEndpoint, params)
-      toast.success(response.data.message)
+      if (!response.data.access_token) {
+        throw new Error()
+      }
+      toast.success('Вы успешно зашли в систему')
       params.rememberMe
         ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.access_token)
         : null
@@ -126,7 +99,7 @@ const AuthProvider = ({ children }: Props) => {
 
     } catch (err: any) {
       console.log(err)
-      toast.error(err.message)
+      toast.error(err.message || 'Неверный логин или пароль')
       if (errorCallback) errorCallback(err.response)
     }
   }

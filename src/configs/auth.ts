@@ -1,5 +1,5 @@
 export default {
-  meEndpoint: '/login/profile',
+  meEndpoint: '/login/profile/',
   loginEndpoint: '/login/',
   logoutEndpoint: '/user/logout',
   storageTokenKeyName: 'accessToken',

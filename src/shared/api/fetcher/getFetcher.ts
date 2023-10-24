@@ -5,7 +5,8 @@ export async function getFetcher(url: string) {
   try {
     const response = await axiosInstance.get(url, {
       headers: {
-        Authorization: getBearerToken()
+        Authorization: getBearerToken(),
+        'Accept-Language': 'ru'
       },
     })
 
